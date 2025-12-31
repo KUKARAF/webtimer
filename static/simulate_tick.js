@@ -3,16 +3,19 @@
  *
  * This script runs a client‑side "tick" that decrements the time shown in any
  * element with the class `time-left`. The expected format is a zero‑padded
- * HH:MM:SS string (e.g., "00:09:12"). The script will:
+ * HH:MM:SS string (e.g., "00:09:12").
  *
- *   1. Locate the first HH:MM:SS pattern inside the element's text.
- *   2. Convert it to total seconds, subtract one (never below 0).
- *   3. Convert the result back to HH:MM:SS and replace only that portion.
- *   4. Add the `expired` class when the timer reaches "00:00:00".
- *
- * If an element does not contain a valid time string, it is ignored.
+ * Added console logging to help debug issues:
+ *   - When the script is loaded.
+ *   - Each tick execution.
+ *   - Each element processed, including original and updated time.
+ *   - Cases where no time pattern is found.
+ *   - When a timer reaches zero.
  */
 
+console.debug('[simulate_tick] script loaded');
+
+// Helper to pad numbers to two digits.
 function pad2(num) {
     return String(num).padStart(2, '0');
 }
@@ -28,6 +31,7 @@ function pad2(num) {
 function decrementTimeString(timeStr) {
     const match = timeStr.match(/^(\d{2}):(\d{2}):(\d{2})$/);
     if (!match) {
+        console.warn(`[simulate_tick] Invalid time format: "${timeStr}"`);
         // Not a valid HH:MM:SS format; return original.
         return { newTime: timeStr, isZero: false };
     }
@@ -55,6 +59,7 @@ function decrementTimeString(timeStr) {
  * substring they contain.
  */
 function tickTimeLeft() {
+    console.debug('[simulate_tick] tick executed');
     const elements = document.querySelectorAll('.time-left');
     elements.forEach(el => {
         const originalText = el.textContent;
@@ -62,18 +67,22 @@ function tickTimeLeft() {
         const timeRegex = /\b(\d{2}):(\d{2}):(\d{2})\b/;
         const match = originalText.match(timeRegex);
         if (!match) {
-            // No time pattern found; skip this element.
-            return;
+            console.info(`[simulate_tick] No HH:MM:SS pattern found in element:`, el);
+            return; // No time pattern found; skip this element.
         }
 
+        console.debug(`[simulate_tick] Found time "${match[0]}" in element:`, el);
         const { newTime, isZero } = decrementTimeString(match[0]);
 
         // Replace only the matched time substring.
         const updatedText = originalText.replace(timeRegex, newTime);
         el.textContent = updatedText;
 
+        console.debug(`[simulate_tick] Updated element text from "${originalText}" to "${updatedText}"`);
+
         // Add or remove the `expired` class based on the new value.
         if (isZero) {
+            console.log(`[simulate_tick] Timer reached zero for element:`, el);
             el.classList.add('expired');
         } else {
             el.classList.remove('expired');
