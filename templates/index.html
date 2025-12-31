@@ -53,11 +53,16 @@
                 id="duration-input"
             >
 
+            <!-- 
+                The create button now uses htmx to POST the new timer and replace the
+                #timer-list content with the server‑rendered list. No custom JS is needed.
+            -->
             <button 
                 id="create-timer-btn"
                 hx-post="/timers" 
                 hx-include="[name='timer_name'], [name='duration_seconds']"
-                hx-swap="none"
+                hx-target="#timer-list"
+                hx-swap="innerHTML"
             >
                 Create Timer
             </button>
@@ -191,17 +196,6 @@
             });
         }
         
-        // Simple helper to refresh the timer list
-        function refreshTimerList() {
-            htmx.ajax('GET', '/timers/simple', '#timer-list');
-        }
-
-        // Initial load
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(refreshTimerList, 100);
-            initDarkMode();
-        });
-        
         // Pomodoro timer helper
         function setPomodoroTimer(duration, name) {
             const durationInput = document.getElementById('duration-input');
@@ -212,40 +206,6 @@
                 durationInput.value = convertedValue.toString();
             }
         }
-
-        // After a timer is created: clear inputs and refresh list
-        document.body.addEventListener('htmx:afterRequest', function(evt) {
-            // POST (create) handling
-            if (evt.detail.path && evt.detail.path.startsWith('/timers') && evt.detail.verb === 'post') {
-                const nameInput = document.querySelector('[name="timer_name"]');
-                const durationInput = document.querySelector('[name="duration_seconds"]');
-                if (nameInput) nameInput.value = '';
-                if (durationInput) durationInput.value = '';
-                refreshTimerList();
-            }
-            // DELETE handling – remove the specific timer-item element
-            else if (evt.detail.path && evt.detail.path.startsWith('/timers/') && evt.detail.verb === 'delete') {
-                const btn = evt.detail.elt; // button that triggered the request
-                const timerItem = btn.closest('.timer-item');
-                if (timerItem) {
-                    timerItem.remove();
-                }
-            }
-        });
-        
-        // Ensure the list refreshes immediately when the create button is clicked
-        document.getElementById('create-timer-btn').addEventListener('click', function() {
-            setTimeout(refreshTimerList, 500);
-        });
-
-        // Prevent htmx from swapping JSON responses (e.g., delete confirmations) into the DOM
-        document.body.addEventListener('htmx:beforeSwap', function(evt) {
-            const resp = evt.detail.xhr.responseText;
-            if (resp && resp.trim().startsWith('{')) {
-                // Cancel the swap; we don't want to render raw JSON messages.
-                evt.detail.shouldSwap = false;
-            }
-        });
 
         // Check for expired timers and start alarms
         function checkForExpiredTimers() {
@@ -317,9 +277,13 @@
             }, 1000);
         }
         
-        setupMuteButton();
-        registerServiceWorker();
-        setupInstallButton();
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            initDarkMode();
+            registerServiceWorker();
+            setupInstallButton();
+            setupMuteButton();
+        });
     </script>
 </body>
 </html>
