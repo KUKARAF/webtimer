@@ -202,10 +202,12 @@
             });
         }
         
-        // Helper to refresh the timer list immediately
+        // Helper to refresh the timer list immediately, with logging for success/failure
         function refreshTimerList() {
             // Use htmx.ajax to perform a GET request and swap the response into #timer-list
-            htmx.ajax('GET', '/timers/simple', '#timer-list');
+            htmx.ajax('GET', '/timers/simple', '#timer-list')
+                .then(() => console.debug('[refreshTimerList] timer list refreshed successfully'))
+                .catch(err => console.error('[refreshTimerList] failed to refresh timer list:', err));
         }
 
         // Auto-refresh the first timer list load (polling is already handled by hx-trigger)
@@ -241,6 +243,9 @@
                 if (durationInput) durationInput.value = '';
                 // Refresh the timer list immediately
                 refreshTimerList();
+            } else {
+                // Log unexpected afterRequest events for debugging
+                console.debug('[htmx:afterRequest] ignored event:', evt.detail);
             }
         });
         
@@ -275,6 +280,8 @@
         document.body.addEventListener('htmx:afterSwap', function(evt) {
             if (evt.detail.target.id === 'timer-list') {
                 checkForExpiredTimers();
+            } else {
+                console.debug('[htmx:afterSwap] swap on unrelated target:', evt.detail.target.id);
             }
         });
         
@@ -283,6 +290,8 @@
             if (evt.detail.path && evt.detail.path.startsWith('/timers/') && evt.detail.verb === 'delete') {
                 const timerId = evt.detail.path.split('/').pop();
                 alarmSystem.stopAlarm(timerId);
+            } else {
+                console.debug('[htmx:beforeRequest] ignored request:', evt.detail);
             }
         });
         
@@ -334,11 +343,10 @@
         registerServiceWorker();
         setupInstallButton();
 
-        // Optional: also bind a click handler to the create button to force refresh (in case htmx afterRequest doesn't fire)
-        document.getElementById('create-timer-btn').addEventListener('click', function() {
-            // The htmx request will be sent automatically; we just ensure the list refreshes after a short delay
-            setTimeout(refreshTimerList, 500);
-        });
+        // NOTE: The previous manual click‑handler that forced a refresh after the
+        // create‑timer button was removed. Refreshes are now handled via the
+        // htmx:afterRequest listener above, with added console logging for any
+        // unexpected behavior.
     </script>
 </body>
 </html>
