@@ -164,91 +164,71 @@
             const toggleButton = document.getElementById('dark-mode-toggle');
             const body = document.body;
             
-            // Check for saved preference or use system preference
             const savedPreference = localStorage.getItem('darkMode');
             const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
             
-            // Apply dark mode if preferred
             if (savedPreference === 'true' || (savedPreference === null && prefersDark)) {
                 body.classList.add('dark-mode');
                 toggleButton.textContent = '☀️';
             }
             
-            // Toggle dark mode
             toggleButton.addEventListener('click', function() {
                 body.classList.toggle('dark-mode');
                 const isDark = body.classList.contains('dark-mode');
-                
-                // Update button icon
                 toggleButton.textContent = isDark ? '☀️' : '🌙';
-                
-                // Save preference
                 localStorage.setItem('darkMode', isDark);
-                
-                // Add a little animation
                 toggleButton.style.transform = 'rotate(90deg)';
                 setTimeout(() => {
                     toggleButton.style.transform = 'rotate(0deg)';
                 }, 300);
             });
             
-            // Watch for system preference changes
             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
                 if (localStorage.getItem('darkMode') === null) {
-                    // Only apply system preference if no user preference is set
                     body.classList.toggle('dark-mode', e.matches);
                     toggleButton.textContent = e.matches ? '☀️' : '🌙';
                 }
             });
         }
         
-        // Helper to refresh the timer list immediately, with logging for success/failure
+        // Simple helper to refresh the timer list
         function refreshTimerList() {
-            // Use htmx.ajax to perform a GET request and swap the response into #timer-list
-            htmx.ajax('GET', '/timers/simple', '#timer-list')
-                .then(() => console.debug('[refreshTimerList] timer list refreshed successfully'))
-                .catch(err => console.error('[refreshTimerList] failed to refresh timer list:', err));
+            htmx.ajax('GET', '/timers/simple', '#timer-list');
         }
 
-        // Auto-refresh the first timer list load (polling is already handled by hx-trigger)
+        // Initial load
         document.addEventListener('DOMContentLoaded', function() {
-            // Slight delay to ensure htmx is ready
-            setTimeout(function() {
-                refreshTimerList();
-            }, 100);
-            
-            // Initialize dark mode
+            setTimeout(refreshTimerList, 100);
             initDarkMode();
         });
         
-        // Pomodoro timer helper function
+        // Pomodoro timer helper
         function setPomodoroTimer(duration, name) {
             const durationInput = document.getElementById('duration-input');
             durationInput.value = duration;
             document.querySelector('[name="timer_name"]').value = name;
-            
-            // Trigger the time conversion
             const convertedValue = convertTimeToSeconds(duration);
             if (convertedValue !== null) {
                 durationInput.value = convertedValue.toString();
             }
         }
 
-        // Clear input fields after creating a timer and refresh timer list
+        // After a timer is created: clear inputs and refresh list
         document.body.addEventListener('htmx:afterRequest', function(evt) {
-            if (evt.detail.path === '/timers' && evt.detail.verb === 'post') {
+            if (evt.detail.path && evt.detail.path.startsWith('/timers') && evt.detail.verb === 'post') {
                 const nameInput = document.querySelector('[name="timer_name"]');
                 const durationInput = document.querySelector('[name="duration_seconds"]');
                 if (nameInput) nameInput.value = '';
                 if (durationInput) durationInput.value = '';
-                // Refresh the timer list immediately
                 refreshTimerList();
-            } else {
-                // Log unexpected afterRequest events for debugging
-                console.debug('[htmx:afterRequest] ignored event:', evt.detail);
             }
         });
         
+        // Ensure the list refreshes immediately when the create button is clicked
+        document.getElementById('create-timer-btn').addEventListener('click', function() {
+            setTimeout(refreshTimerList, 500);
+        });
+
         // Check for expired timers and start alarms
         function checkForExpiredTimers() {
             const timerItems = document.querySelectorAll('.timer-item');
@@ -258,7 +238,6 @@
                     const timerId = item.dataset.timerId;
                     if (timerId && !alarmSystem.isAlarming(timerId)) {
                         alarmSystem.startAlarm(timerId);
-                        // Add visual alarm indicator
                         if (!item.querySelector('.alarm-indicator')) {
                             const alarmIndicator = document.createElement('span');
                             alarmIndicator.className = 'alarm-indicator';
@@ -267,35 +246,28 @@
                         }
                     }
                 } else {
-                    // Remove alarm indicator if timer is not expired
                     const alarmIndicator = item.querySelector('.alarm-indicator');
-                    if (alarmIndicator) {
-                        alarmIndicator.remove();
-                    }
+                    if (alarmIndicator) alarmIndicator.remove();
                 }
             });
         }
         
-        // Check for alarms when timer list updates
+        // Run alarm check after the timer list swaps
         document.body.addEventListener('htmx:afterSwap', function(evt) {
             if (evt.detail.target.id === 'timer-list') {
                 checkForExpiredTimers();
-            } else {
-                console.debug('[htmx:afterSwap] swap on unrelated target:', evt.detail.target.id);
             }
         });
         
-        // Stop alarm when timer is deleted
+        // Stop alarm when a timer is deleted
         document.body.addEventListener('htmx:beforeRequest', function(evt) {
             if (evt.detail.path && evt.detail.path.startsWith('/timers/') && evt.detail.verb === 'delete') {
                 const timerId = evt.detail.path.split('/').pop();
                 alarmSystem.stopAlarm(timerId);
-            } else {
-                console.debug('[htmx:beforeRequest] ignored request:', evt.detail);
             }
         });
         
-        // Add mute all button functionality
+        // Mute button
         function setupMuteButton() {
             const muteButton = document.createElement('button');
             muteButton.id = 'mute-all-button';
@@ -317,36 +289,19 @@
             muteButton.addEventListener('click', function() {
                 alarmSystem.stopAllAlarms();
                 muteButton.style.display = 'none';
-                
-                // Remove all alarm indicators
-                document.querySelectorAll('.alarm-indicator').forEach(indicator => {
-                    indicator.remove();
-                });
+                document.querySelectorAll('.alarm-indicator').forEach(ind => ind.remove());
             });
             
             document.body.appendChild(muteButton);
             
-            // Show mute button when any alarm is active
-            setInterval(function() {
-                if (alarmSystem.activeAlarms.size > 0) {
-                    muteButton.style.display = 'block';
-                } else {
-                    muteButton.style.display = 'none';
-                }
+            setInterval(() => {
+                muteButton.style.display = alarmSystem.activeAlarms.size > 0 ? 'block' : 'none';
             }, 1000);
         }
         
-        // Initialize mute button when page loads
         setupMuteButton();
-        
-        // Initialize PWA features
         registerServiceWorker();
         setupInstallButton();
-
-        // NOTE: The previous manual click‑handler that forced a refresh after the
-        // create‑timer button was removed. Refreshes are now handled via the
-        // htmx:afterRequest listener above, with added console logging for any
-        // unexpected behavior.
     </script>
 </body>
 </html>
