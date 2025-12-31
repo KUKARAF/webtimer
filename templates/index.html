@@ -15,6 +15,7 @@
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <script src="/static/alarm.js"></script>
     <script src="/static/time-conversion.js"></script>
+    <script src="/static/timer_renderer.js"></script>
     <!-- TODO: simulate_tick.js disabled due to issues, fix later -->
 </head>
 <body>
@@ -38,10 +39,7 @@
                 type="text" 
                 name="timer_name" 
                 placeholder="Timer name (optional)" 
-                hx-post="/timers" 
-                hx-trigger="keyup[keyCode==13] from:closest input" 
-                hx-target="#timer-list" 
-                hx-swap="innerHTML"
+                id="timer-name-input"
             >
             <input 
                 type="text" 
@@ -53,16 +51,12 @@
                 id="duration-input"
             >
 
-            <!-- 
-                The create button now uses htmx to POST the new timer and replace the
-                #timer-list content with the server‑rendered list. No custom JS is needed.
-            -->
+            <!-- The create button now uses a pure‑JS handler that posts the new timer
+                 and then re‑renders the timer list via the single function in timer_renderer.js. -->
             <button 
                 id="create-timer-btn"
-                hx-post="/timers" 
-                hx-include="[name='timer_name'], [name='duration_seconds']"
-                hx-target="#timer-list"
-                hx-swap="innerHTML"
+                type="button"
+                onclick="createTimer()"
             >
                 Create Timer
             </button>
@@ -97,7 +91,7 @@
             </button>
         </div>
         
-        <div id="timer-list" class="timer-list" hx-get="/timers/simple" hx-trigger="every 10s, load">
+        <div id="timer-list" class="timer-list">
             <div class="loading">Loading timers...</div>
         </div>
     </div>
@@ -200,52 +194,14 @@
         function setPomodoroTimer(duration, name) {
             const durationInput = document.getElementById('duration-input');
             durationInput.value = duration;
-            document.querySelector('[name="timer_name"]').value = name;
+            document.getElementById('timer-name-input').value = name;
             const convertedValue = convertTimeToSeconds(duration);
             if (convertedValue !== null) {
                 durationInput.value = convertedValue.toString();
             }
         }
 
-        // Check for expired timers and start alarms
-        function checkForExpiredTimers() {
-            const timerItems = document.querySelectorAll('.timer-item');
-            timerItems.forEach(item => {
-                const timeLeftElement = item.querySelector('.time-left');
-                if (timeLeftElement && timeLeftElement.classList.contains('expired')) {
-                    const timerId = item.dataset.timerId;
-                    if (timerId && !alarmSystem.isAlarming(timerId)) {
-                        alarmSystem.startAlarm(timerId);
-                        if (!item.querySelector('.alarm-indicator')) {
-                            const alarmIndicator = document.createElement('span');
-                            alarmIndicator.className = 'alarm-indicator';
-                            alarmIndicator.title = 'Alarm sounding';
-                            timeLeftElement.appendChild(alarmIndicator);
-                        }
-                    }
-                } else {
-                    const alarmIndicator = item.querySelector('.alarm-indicator');
-                    if (alarmIndicator) alarmIndicator.remove();
-                }
-            });
-        }
-        
-        // Run alarm check after the timer list swaps
-        document.body.addEventListener('htmx:afterSwap', function(evt) {
-            if (evt.detail.target.id === 'timer-list') {
-                checkForExpiredTimers();
-            }
-        });
-        
-        // Stop alarm when a timer is deleted (still needed for alarm cleanup)
-        document.body.addEventListener('htmx:beforeRequest', function(evt) {
-            if (evt.detail.path && evt.detail.path.startsWith('/timers/') && evt.detail.verb === 'delete') {
-                const timerId = evt.detail.path.split('/').pop();
-                alarmSystem.stopAlarm(timerId);
-            }
-        });
-        
-        // Mute button
+        // Mute button (kept from previous version)
         function setupMuteButton() {
             const muteButton = document.createElement('button');
             muteButton.id = 'mute-all-button';
@@ -276,13 +232,15 @@
                 muteButton.style.display = alarmSystem.activeAlarms.size > 0 ? 'block' : 'none';
             }, 1000);
         }
-        
+
         // Initialisation
         document.addEventListener('DOMContentLoaded', function() {
             initDarkMode();
             registerServiceWorker();
             setupInstallButton();
             setupMuteButton();
+            // Load and render timers using the single function from timer_renderer.js
+            fetchAndRenderTimers();
         });
     </script>
 </body>
