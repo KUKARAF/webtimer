@@ -1,0 +1,23 @@
+services:
+  webtimer:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      - timer_data:/data
+      - .:/app
+    environment:
+      - DB_PATH=/data/timers.db
+      - FLASK_ENV=production
+      - FLASK_DEBUG=false
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  timer_data:
