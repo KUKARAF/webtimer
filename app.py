@@ -15,22 +15,30 @@ from logging.handlers import RotatingFileHandler
 
 app = Flask(__name__)
 
+# ----------------------------------------------------------------------
 # Configuration
+# ----------------------------------------------------------------------
+# You can adjust these defaults for your production environment.
+# The daily limit has been removed; only an hourly limit remains.
 app.config['DEBUG'] = os.environ.get('FLASK_DEBUG', 'false').lower() == 'true'
 app.config['ENV'] = os.environ.get('FLASK_ENV', 'production')
 app.config['JSONIFY_PRETTYPRINT_REGULAR'] = False
 
-# Enable CORS for all routes (configure as needed)
+# ----------------------------------------------------------------------
+# CORS & Rate Limiting
+# ----------------------------------------------------------------------
 CORS(app, resources={r"/*": {"origins": "*"}})
 
-# Rate limiting to prevent abuse
+# Only an hourly limit is applied globally.
 limiter = Limiter(
     app=app,
     key_func=get_remote_address,
-    default_limits=["200 per day", "50 per hour"]
+    default_limits=["100 per hour"]  # daily limit removed
 )
 
+# ----------------------------------------------------------------------
 # Database setup
+# ----------------------------------------------------------------------
 DB_PATH = os.environ.get('DB_PATH', 'timers.db')
 
 # Logging setup
@@ -61,7 +69,9 @@ def init_db():
     conn.commit()
     conn.close()
 
+# ----------------------------------------------------------------------
 # Timer cleanup thread
+# ----------------------------------------------------------------------
 class TimerCleanupThread(threading.Thread):
     def __init__(self):
         super().__init__()
@@ -90,6 +100,9 @@ class TimerCleanupThread(threading.Thread):
 cleanup_thread = TimerCleanupThread()
 cleanup_thread.start()
 
+# ----------------------------------------------------------------------
+# Routes
+# ----------------------------------------------------------------------
 @app.route('/timers', methods=['POST'])
 def create_timer():
     # Handle both JSON and form data
@@ -224,6 +237,7 @@ def list_timers():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/timers/simple', methods=['GET'])
+@limiter.exempt  # Exempt this endpoint from rate limiting to stop 429 errors
 def list_timers_simple():
     """Simple endpoint for HTMX frontend - returns HTML fragments"""
     try:
