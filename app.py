@@ -29,11 +29,11 @@ app.config['JSONIFY_PRETTYPRINT_REGULAR'] = False
 # ----------------------------------------------------------------------
 CORS(app, resources={r"/*": {"origins": "*"}})
 
-# Apply both hourly and daily limits globally.
+# No rate limits are applied globally.
 limiter = Limiter(
     app=app,
     key_func=get_remote_address,
-    default_limits=["100 per hour", "1000 per day"]
+    default_limits=[]  # No rate limits
 )
 
 # ----------------------------------------------------------------------
