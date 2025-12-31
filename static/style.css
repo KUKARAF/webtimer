@@ -14,6 +14,7 @@
     --input-border: #ddd;
 }
 
+/* Dark mode overrides */
 .dark-mode {
     --bg-color: #1a1a1a;
     --container-bg: #2d2d2d;
@@ -30,6 +31,7 @@
     --input-border: #555;
 }
 
+/* Global page styles */
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     line-height: 1.6;
@@ -50,12 +52,16 @@ body {
     transition: background-color 0.3s, box-shadow 0.3s;
 }
 
+/* Header */
 h1 {
     color: var(--primary-color);
     text-align: center;
     margin-bottom: 30px;
 }
 
+/* -------------------------------------------------
+   Timer form – input fields and button
+   ------------------------------------------------- */
 .timer-form {
     display: flex;
     flex-wrap: wrap;
@@ -63,10 +69,17 @@ h1 {
     margin-bottom: 30px;
 }
 
+/* Ensure consistent sizing for inputs and button */
+.timer-form input,
+.timer-form button {
+    box-sizing: border-box;          /* Include padding & border in width/height */
+}
+
+/* Input fields */
 .timer-form input {
     flex: 1;
-    min-width: 150px;
-    padding: 10px;
+    min-width: 150px;                /* Base minimum width */
+    padding: 10px;                   /* Same vertical & horizontal padding */
     border: 1px solid var(--border-color);
     border-radius: 4px;
     font-size: 16px;
@@ -75,10 +88,11 @@ h1 {
     transition: border-color 0.3s, background-color 0.3s, color 0.3s;
 }
 
+/* Button – now matches input height */
 .timer-form button {
     flex: 1;
-    min-width: 120px;
-    padding: 10px 20px;
+    min-width: 150px;                /* Align min‑width with inputs */
+    padding: 10px;                   /* Same padding as inputs for equal height */
     background-color: var(--primary-color);
     color: white;
     border: none;
@@ -88,28 +102,33 @@ h1 {
     transition: background-color 0.3s;
 }
 
+/* Hover state for button */
+.timer-form button:hover {
+    background-color: var(--primary-hover);
+}
+
+/* Responsive adjustments for mobile */
 @media (max-width: 768px) {
     .timer-form {
-        flex-direction: column;
+        flex-direction: column;      /* Stack vertically */
     }
-    
+
     .timer-form input,
     .timer-form button {
         width: 100%;
         min-width: 100%;
         flex: none;
     }
-    
-    /* Ensure the button behaves like a block element so it truly fills the width */
+
+    /* Ensure button behaves like a block element */
     .timer-form button {
         display: block;
     }
 }
 
-.timer-form button:hover {
-    background-color: var(--primary-hover);
-}
-
+/* -------------------------------------------------
+   Timer list and items
+   ------------------------------------------------- */
 .timer-list {
     display: grid;
     gap: 15px;
@@ -150,6 +169,7 @@ h1 {
     margin-left: 15px;
 }
 
+/* Delete button */
 .delete-btn {
     padding: 8px 12px;
     background-color: var(--danger-color);
@@ -165,12 +185,16 @@ h1 {
     background-color: var(--danger-hover);
 }
 
+/* Time left display */
 .time-left {
     font-weight: bold;
     color: var(--success-color);
     font-size: 18px;
 }
 
+/* -------------------------------------------------
+   Pomodoro buttons
+   ------------------------------------------------- */
 .pomodoro-buttons {
     margin: 15px 0;
     display: flex;
@@ -191,35 +215,33 @@ h1 {
     font-weight: bold;
 }
 
+/* Specific colors */
 .work-btn {
     background-color: #e74c3c;
 }
-
 .break-btn {
     background-color: #27ae60;
 }
-
 .long-break-btn {
     background-color: #3498db;
 }
 
+/* Hover effects */
 .pomodoro-btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
-
 .work-btn:hover {
     background-color: #c0392b;
 }
-
 .break-btn:hover {
     background-color: #219653;
 }
-
 .long-break-btn:hover {
     background-color: #2980b9;
 }
 
+/* Miscellaneous UI helpers */
 .expired {
     color: #e74c3c;
 }
@@ -234,36 +256,36 @@ h1 {
     animation: pulse 1s infinite;
 }
 
+/* Dark‑mode toggle button */
 #dark-mode-toggle {
     padding: 5px;
     border-radius: 50%;
     transition: all 0.3s ease;
 }
-
 #dark-mode-toggle:hover {
     transform: scale(1.1);
     background-color: rgba(255, 255, 255, 0.1);
 }
-
 .dark-mode #dark-mode-toggle:hover {
     background-color: rgba(0, 0, 0, 0.1);
 }
 
-@keyframes pulse {
-    0% { transform: scale(1); opacity: 0.7; }
-    50% { transform: scale(1.2); opacity: 1; }
-    100% { transform: scale(1); opacity: 0.7; }
-}
-
+/* Loading / empty states */
 .loading {
     text-align: center;
     padding: 20px;
     color: var(--secondary-text);
 }
-
 .empty-state {
     text-align: center;
     padding: 40px;
     color: var(--secondary-text);
     font-style: italic;
+}
+
+/* Pulse animation for alarm indicator */
+@keyframes pulse {
+    0%   { transform: scale(1);   opacity: 0.7; }
+    50%  { transform: scale(1.2); opacity: 1;   }
+    100% { transform: scale(1);   opacity: 0.7; }
 }
