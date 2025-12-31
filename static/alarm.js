@@ -1,6 +1,8 @@
-// Alarm system for WebTimer
-// Beeps when timer reaches 0 until the alarm is deleted
-// Based on: https://stackoverflow.com/a/... (CC BY-SA 4.0)
+/**
+ * Alarm system for WebTimer
+ * Beeps when timer reaches 0 until the alarm is deleted
+ * Based on: https://stackoverflow.com/a/... (CC BY-SA 4.0)
+ */
 
 class AlarmSystem {
     constructor() {
@@ -113,7 +115,8 @@ class AlarmSystem {
 // Global alarm system instance
 const alarmSystem = new AlarmSystem();
 
-// Export for use in other modules
+// Export for use in other modules (Node.js environments)
+// In the browser this block does nothing, leaving `alarmSystem` as a global.
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { AlarmSystem, alarmSystem };
 }
