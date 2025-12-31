@@ -70,6 +70,32 @@ def init_db():
     conn.close()
 
 # ----------------------------------------------------------------------
+# Helper utilities
+# ----------------------------------------------------------------------
+def format_seconds(seconds: int) -> str:
+    """Return a HH:MM:SS string for a non‑negative number of seconds."""
+    seconds = max(0, seconds)
+    hours, remainder = divmod(seconds, 3600)
+    minutes, secs = divmod(remainder, 60)
+    return f"{int(hours):02d}:{int(minutes):02d}:{int(secs):02d}"
+
+def timer_to_dict(row: sqlite3.Row) -> dict:
+    """
+    Convert a DB row into the JSON shape expected by the front‑end
+    (id, name, time_left, expired).
+    """
+    expires_at = datetime.fromisoformat(row['expires_at'])
+    now = datetime.now()
+    time_left_seconds = int((expires_at - now).total_seconds())
+    expired = time_left_seconds <= 0
+    return {
+        'id': row['id'],
+        'name': row['name'],
+        'time_left': format_seconds(time_left_seconds),
+        'expired': expired
+    }
+
+# ----------------------------------------------------------------------
 # Timer cleanup thread
 # ----------------------------------------------------------------------
 class TimerCleanupThread(threading.Thread):
@@ -141,12 +167,12 @@ def create_timer():
         conn.commit()
         conn.close()
         
+        # Return the same shape the front‑end expects
         return jsonify({
             'id': timer_id,
             'name': name,
-            'duration_seconds': duration_seconds,
-            'created_at': created_at.isoformat(),
-            'expires_at': expires_at.isoformat()
+            'time_left': format_seconds(duration_seconds),
+            'expired': False
         }), 201
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -168,22 +194,8 @@ def get_timer(identifier):
         if not timer:
             return jsonify({'error': 'Timer not found'}), 404
         
-        expires_at = datetime.fromisoformat(timer['expires_at'])
-        now = datetime.now()
-        
-        if expires_at <= now:
-            time_left = 0
-        else:
-            time_left = int((expires_at - now).total_seconds())
-        
-        return jsonify({
-            'id': timer['id'],
-            'name': timer['name'],
-            'duration_seconds': timer['duration_seconds'],
-            'created_at': timer['created_at'],
-            'expires_at': timer['expires_at'],
-            'time_left_seconds': time_left
-        })
+        # Return the shape expected by timer_renderer.js
+        return jsonify(timer_to_dict(timer))
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -211,27 +223,22 @@ def delete_timer(identifier):
 
 @app.route('/timers', methods=['GET'])
 def list_timers():
+    """
+    Return a JSON array of all timers in the shape required by
+    `static/timer_renderer.js`:
+        {
+            id: string,
+            name: string | null,
+            time_left: "HH:MM:SS",
+            expired: boolean
+        }
+    """
     try:
         conn = get_db_connection()
         timers = conn.execute('SELECT * FROM timers').fetchall()
         conn.close()
         
-        result = []
-        now = datetime.now()
-        
-        for timer in timers:
-            expires_at = datetime.fromisoformat(timer['expires_at'])
-            time_left = int((expires_at - now).total_seconds()) if expires_at > now else 0
-            
-            result.append({
-                'id': timer['id'],
-                'name': timer['name'],
-                'duration_seconds': timer['duration_seconds'],
-                'created_at': timer['created_at'],
-                'expires_at': timer['expires_at'],
-                'time_left_seconds': time_left
-            })
-        
+        result = [timer_to_dict(timer) for timer in timers]
         return jsonify(result), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -254,12 +261,10 @@ def list_timers_simple():
         for timer in timers:
             expires_at = datetime.fromisoformat(timer['expires_at'])
             time_left = int((expires_at - now).total_seconds())
-            time_left = max(0, time_left)  # Ensure non-negative
+            time_left = max(0, time_left)  # Ensure non‑negative
             
             # Format time left as HH:MM:SS
-            hours, remainder = divmod(time_left, 3600)
-            minutes, seconds = divmod(remainder, 60)
-            time_formatted = f"{int(hours):02d}:{int(minutes):02d}:{int(seconds):02d}"
+            time_formatted = format_seconds(time_left)
             
             timer_name = timer['name'] if timer['name'] else f"Timer {timer['id'][:8]}"
             expired_class = "expired" if time_left <= 0 else ""
@@ -277,8 +282,7 @@ def list_timers_simple():
                     <button 
                         class="delete-btn" 
                         hx-delete="/timers/{timer['id']}" 
-                        hx-target="#timer-list" 
-                        hx-swap="innerHTML"
+                        hx-target="#timer-list"
                     >
                         Delete
                     </button>
