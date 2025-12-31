@@ -225,13 +225,15 @@
             }
         }
 
-        // Clear input fields after creating a timer
+        // Clear input fields after creating a timer and refresh timer list
         document.body.addEventListener('htmx:afterRequest', function(evt) {
             if (evt.detail.path === '/timers' && evt.detail.verb === 'post') {
                 const nameInput = document.querySelector('[name="timer_name"]');
                 const durationInput = document.querySelector('[name="duration_seconds"]');
                 if (nameInput) nameInput.value = '';
                 if (durationInput) durationInput.value = '';
+                // Trigger a refresh of the timer list to show the newly created timer
+                htmx.trigger('#timer-list', 'load');
             }
         });
         
