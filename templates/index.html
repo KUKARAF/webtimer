@@ -238,6 +238,15 @@
             setTimeout(refreshTimerList, 500);
         });
 
+        // Prevent htmx from swapping JSON responses (e.g., delete confirmations) into the DOM
+        document.body.addEventListener('htmx:beforeSwap', function(evt) {
+            const resp = evt.detail.xhr.responseText;
+            if (resp && resp.trim().startsWith('{')) {
+                // Cancel the swap; we don't want to render raw JSON messages.
+                evt.detail.shouldSwap = false;
+            }
+        });
+
         // Check for expired timers and start alarms
         function checkForExpiredTimers() {
             const timerItems = document.querySelectorAll('.timer-item');
