@@ -1,3 +1,5 @@
+// TODO: simulate_tick.js currently disabled due to issues – fix later
+
 /**
  * simulate_tick.js
  *
