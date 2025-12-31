@@ -114,11 +114,14 @@
             .timer-form button {
                 width: 100%;
                 min-width: 100%;
-                flex: none; /* Remove flex properties on mobile */
+                flex: none;
+            }
+            
+            /* Ensure the button behaves like a block element so it truly fills the width */
+            .timer-form button {
+                display: block;
             }
         }
-        
-
         
         .timer-form button:hover {
             background-color: var(--primary-hover);
