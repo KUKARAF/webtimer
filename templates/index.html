@@ -54,9 +54,9 @@
 
             <button 
                 hx-post="/timers" 
-                hx-target="#timer-list" 
-                hx-swap="innerHTML" 
                 hx-include="[name='timer_name'], [name='duration_seconds']"
+                hx-swap="none"
+                hx-on="htmx:afterRequest: htmx.trigger('#timer-list','load')"
             >
                 Create Timer
             </button>
