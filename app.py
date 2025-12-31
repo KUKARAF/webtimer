@@ -19,7 +19,7 @@ app = Flask(__name__)
 # Configuration
 # ----------------------------------------------------------------------
 # You can adjust these defaults for your production environment.
-# The daily limit has been removed; only an hourly limit remains.
+# Re‑enable both hourly and daily limits.
 app.config['DEBUG'] = os.environ.get('FLASK_DEBUG', 'false').lower() == 'true'
 app.config['ENV'] = os.environ.get('FLASK_ENV', 'production')
 app.config['JSONIFY_PRETTYPRINT_REGULAR'] = False
@@ -29,11 +29,11 @@ app.config['JSONIFY_PRETTYPRINT_REGULAR'] = False
 # ----------------------------------------------------------------------
 CORS(app, resources={r"/*": {"origins": "*"}})
 
-# Only an hourly limit is applied globally.
+# Apply both hourly and daily limits globally.
 limiter = Limiter(
     app=app,
     key_func=get_remote_address,
-    default_limits=["100 per hour"]  # daily limit removed
+    default_limits=["100 per hour", "1000 per day"]
 )
 
 # ----------------------------------------------------------------------
