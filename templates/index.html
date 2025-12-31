@@ -54,10 +54,10 @@
             >
 
             <button 
+                id="create-timer-btn"
                 hx-post="/timers" 
                 hx-include="[name='timer_name'], [name='duration_seconds']"
                 hx-swap="none"
-                hx-on="htmx:afterRequest: htmx.trigger('#timer-list','load')"
             >
                 Create Timer
             </button>
@@ -202,10 +202,17 @@
             });
         }
         
-        // Auto-refresh the first timer list load
+        // Helper to refresh the timer list immediately
+        function refreshTimerList() {
+            // Use htmx.ajax to perform a GET request and swap the response into #timer-list
+            htmx.ajax('GET', '/timers/simple', '#timer-list');
+        }
+
+        // Auto-refresh the first timer list load (polling is already handled by hx-trigger)
         document.addEventListener('DOMContentLoaded', function() {
+            // Slight delay to ensure htmx is ready
             setTimeout(function() {
-                htmx.trigger('#timer-list', 'load');
+                refreshTimerList();
             }, 100);
             
             // Initialize dark mode
@@ -232,8 +239,8 @@
                 const durationInput = document.querySelector('[name="duration_seconds"]');
                 if (nameInput) nameInput.value = '';
                 if (durationInput) durationInput.value = '';
-                // Trigger a refresh of the timer list to show the newly created timer
-                htmx.trigger('#timer-list', 'load');
+                // Refresh the timer list immediately
+                refreshTimerList();
             }
         });
         
@@ -326,6 +333,12 @@
         // Initialize PWA features
         registerServiceWorker();
         setupInstallButton();
+
+        // Optional: also bind a click handler to the create button to force refresh (in case htmx afterRequest doesn't fire)
+        document.getElementById('create-timer-btn').addEventListener('click', function() {
+            // The htmx request will be sent automatically; we just ensure the list refreshes after a short delay
+            setTimeout(refreshTimerList, 500);
+        });
     </script>
 </body>
 </html>
