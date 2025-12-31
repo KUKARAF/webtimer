@@ -81,13 +81,28 @@
         }
         
         .timer-form input {
-            flex: 2;
+            flex: 1;
             min-width: 150px;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 16px;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            transition: border-color 0.3s, background-color 0.3s, color 0.3s;
         }
         
         .timer-form button {
             flex: 1;
             min-width: 120px;
+            padding: 10px 20px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
         }
         
         @media (max-width: 768px) {
@@ -99,32 +114,11 @@
             .timer-form button {
                 width: 100%;
                 min-width: 100%;
+                flex: none; /* Remove flex properties on mobile */
             }
         }
         
-        .timer-form input {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            font-size: 16px;
-            background-color: var(--input-bg);
-            color: var(--text-color);
-            transition: border-color 0.3s, background-color 0.3s, color 0.3s;
-        }
-        
 
-        
-        .timer-form button {
-            padding: 10px 20px;
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s;
-        }
         
         .timer-form button:hover {
             background-color: var(--primary-hover);
