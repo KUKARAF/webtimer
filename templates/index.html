@@ -75,8 +75,31 @@
         
         .timer-form {
             display: flex;
+            flex-wrap: wrap;
             gap: 10px;
             margin-bottom: 30px;
+        }
+        
+        .timer-form input {
+            flex: 2;
+            min-width: 150px;
+        }
+        
+        .timer-form button {
+            flex: 1;
+            min-width: 120px;
+        }
+        
+        @media (max-width: 768px) {
+            .timer-form {
+                flex-direction: column;
+            }
+            
+            .timer-form input,
+            .timer-form button {
+                width: 100%;
+                min-width: 100%;
+            }
         }
         
         .timer-form input {
@@ -90,13 +113,7 @@
             transition: border-color 0.3s, background-color 0.3s, color 0.3s;
         }
         
-        .time-format-hint {
-            font-size: 12px;
-            color: var(--secondary-text);
-            margin-top: -8px;
-            margin-bottom: 10px;
-            text-align: right;
-        }
+
         
         .timer-form button {
             padding: 10px 20px;
@@ -307,9 +324,7 @@
                 title="Enter time in seconds (60), minutes (5m), or hours (1h)"
                 id="duration-input"
             >
-            <div class="time-format-hint">
-                Supports: 60 (seconds), 5m (minutes), 1h (hours)
-            </div>
+
             <button 
                 hx-post="/timers" 
                 hx-target="#timer-list" 
