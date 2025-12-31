@@ -283,6 +283,29 @@ def index():
     """Serve the main HTML interface"""
     return render_template('index.html')
 
+@app.route('/static/<path:filename>')
+def serve_static(filename):
+    """Serve static files with proper cache headers"""
+    response = send_from_directory('static', filename)
+    
+    # Set cache headers for service worker and manifest
+    if filename == 'sw.js' or filename == 'manifest.json':
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+    else:
+        # Cache other static assets for better performance
+        response.headers['Cache-Control'] = 'public, max-age=31536000, immutable'
+    
+    return response
+
+@app.route('/static/icons/<path:filename>')
+def serve_icons(filename):
+    """Serve icon files with proper cache headers"""
+    response = send_from_directory('static/icons', filename)
+    response.headers['Cache-Control'] = 'public, max-age=31536000, immutable'
+    return response
+
 @app.route('/test-alarm')
 def test_alarm():
     """Serve the alarm test page"""

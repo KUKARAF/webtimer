@@ -3,7 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#3498db">
     <title>WebTimer - Simple Timer Dashboard</title>
+    <link rel="manifest" href="/static/manifest.json">
+    <link rel="apple-touch-icon" href="/static/icons/icon-192x192.png">
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <script src="/static/alarm.js"></script>
     <script src="/static/time-conversion.js"></script>
@@ -348,6 +355,67 @@
     </div>
     
     <script>
+        // Service Worker registration for PWA
+        function registerServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                    navigator.serviceWorker.register('/static/sw.js')
+                        .then(function(registration) {
+                            console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                        })
+                        .catch(function(err) {
+                            console.log('ServiceWorker registration failed: ', err);
+                        });
+                });
+            }
+        }
+
+        // PWA Install prompt handling
+        let deferredPrompt;
+        const installButton = document.createElement('button');
+        
+        function setupInstallButton() {
+            installButton.id = 'pwa-install-button';
+            installButton.style.position = 'fixed';
+            installButton.style.bottom = '20px';
+            installButton.style.left = '20px';
+            installButton.style.padding = '10px 15px';
+            installButton.style.backgroundColor = '#3498db';
+            installButton.style.color = 'white';
+            installButton.style.border = 'none';
+            installButton.style.borderRadius = '4px';
+            installButton.style.cursor = 'pointer';
+            installButton.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
+            installButton.style.zIndex = '1000';
+            installButton.style.display = 'none';
+            installButton.innerHTML = '📱 Install App';
+            installButton.title = 'Install WebTimer as a PWA';
+            
+            installButton.addEventListener('click', function() {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    deferredPrompt.userChoice.then(function(choiceResult) {
+                        if (choiceResult.outcome === 'accepted') {
+                            console.log('User accepted the install prompt');
+                        } else {
+                            console.log('User dismissed the install prompt');
+                        }
+                        deferredPrompt = null;
+                        installButton.style.display = 'none';
+                    });
+                }
+            });
+            
+            document.body.appendChild(installButton);
+        }
+
+        // Handle the beforeinstallprompt event
+        window.addEventListener('beforeinstallprompt', function(e) {
+            e.preventDefault();
+            deferredPrompt = e;
+            installButton.style.display = 'block';
+        });
+
         // Dark mode functionality
         function initDarkMode() {
             const toggleButton = document.getElementById('dark-mode-toggle');
@@ -509,6 +577,10 @@
         
         // Initialize mute button when page loads
         setupMuteButton();
+        
+        // Initialize PWA features
+        registerServiceWorker();
+        setupInstallButton();
     </script>
 </body>
 </html>

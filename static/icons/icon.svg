@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="timerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3498db;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2980b9;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="240" fill="url(#timerGradient)" stroke="#ffffff" stroke-width="8"/>
+  
+  <!-- Timer face - white circle -->
+  <circle cx="256" cy="256" r="200" fill="#ffffff" stroke="#e0e0e0" stroke-width="4"/>
+  
+  <!-- Clock hands -->
+  <rect x="252" y="150" width="8" height="120" fill="#3498db" rx="4"/>
+  <rect x="252" y="180" width="8" height="80" fill="#e74c3c" rx="4" transform="rotate(90, 256, 256)"/>
+  
+  <!-- Timer indicator dots -->
+  <circle cx="256" cy="80" r="12" fill="#3498db"/>
+  <circle cx="432" cy="256" r="12" fill="#3498db"/>
+  <circle cx="256" cy="432" r="12" fill="#3498db"/>
+  <circle cx="80" cy="256" r="12" fill="#3498db"/>
+  
+  <!-- App name text -->
+  <text x="256" y="380" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="#3498db" text-anchor="middle">WebTimer</text>
+  
+  <!-- Timer icon in center -->
+  <text x="256" y="270" font-family="Arial, sans-serif" font-size="64" font-weight="bold" fill="#3498db" text-anchor="middle">🕒</text>
+</svg>
