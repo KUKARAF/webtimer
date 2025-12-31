@@ -215,12 +215,21 @@
 
         // After a timer is created: clear inputs and refresh list
         document.body.addEventListener('htmx:afterRequest', function(evt) {
+            // POST (create) handling
             if (evt.detail.path && evt.detail.path.startsWith('/timers') && evt.detail.verb === 'post') {
                 const nameInput = document.querySelector('[name="timer_name"]');
                 const durationInput = document.querySelector('[name="duration_seconds"]');
                 if (nameInput) nameInput.value = '';
                 if (durationInput) durationInput.value = '';
                 refreshTimerList();
+            }
+            // DELETE handling – remove the specific timer-item element
+            else if (evt.detail.path && evt.detail.path.startsWith('/timers/') && evt.detail.verb === 'delete') {
+                const btn = evt.detail.elt; // button that triggered the request
+                const timerItem = btn.closest('.timer-item');
+                if (timerItem) {
+                    timerItem.remove();
+                }
             }
         });
         
@@ -259,7 +268,7 @@
             }
         });
         
-        // Stop alarm when a timer is deleted
+        // Stop alarm when a timer is deleted (still needed for alarm cleanup)
         document.body.addEventListener('htmx:beforeRequest', function(evt) {
             if (evt.detail.path && evt.detail.path.startsWith('/timers/') && evt.detail.verb === 'delete') {
                 const timerId = evt.detail.path.split('/').pop();
